@@ -19,7 +19,10 @@ pub enum ResourceQuota {
     Triggers(u64),
     Functions(u64),
     ClientEncryptionKeys(u64),
+    InteropUsers(u64),
+    AuthPolicyElements(u64),
 }
+
 
 const DATABASES: &str = "databases=";
 const STORED_PROCEDURES: &str = "storedProcedures=";
@@ -33,6 +36,8 @@ const PERMISSIONS: &str = "permissions=";
 const TRIGGERS: &str = "triggers=";
 const FUNCTIONS: &str = "functions=";
 const CLIENT_ENCRYPTION_KEYS: &str = "clientEncryptionKeys=";
+const INTEROP_USERS: &str = "interopUsers=";
+const AUTH_POLICY_ELEMENTS: &str = "authPolicyElements=";
 
 /// Parse a collection of [`ResourceQuota`] from a string
 pub(crate) fn resource_quotas_from_str(s: &str) -> Result<Vec<ResourceQuota>, failure::Error> {
@@ -67,6 +72,10 @@ pub(crate) fn resource_quotas_from_str(s: &str) -> Result<Vec<ResourceQuota>, fa
             v.push(ResourceQuota::Functions(str::parse(stripped)?));
         } else if let Some(stripped) = token.strip_prefix(CLIENT_ENCRYPTION_KEYS) {
             v.push(ResourceQuota::ClientEncryptionKeys(str::parse(stripped)?));
+        } else if let Some(stripped) = token.strip_prefix(INTEROP_USERS) {
+            v.push(ResourceQuota::InteropUsers(str::parse(stripped)?));
+        } else if let Some(stripped) = token.strip_prefix(AUTH_POLICY_ELEMENTS) {
+            v.push(ResourceQuota::AuthPolicyElements(str::parse(stripped)?));
         } else {
             return Err(TokenParsingError::UnsupportedToken {
                 token: token.to_string(),
@@ -91,7 +100,7 @@ mod tests {
         assert_eq!(resource_quota, vec![ResourceQuota::StoredProcedures(25)]);
 
         let resource_quota = resource_quotas_from_str(
-            "databases=100;collections=5000;users=500000;permissions=2000000;clientEncryptionKeys=13;",
+            "databases=100;collections=5000;users=500000;permissions=2000000;clientEncryptionKeys=13;interopUsers=2000;authPolicyElements=200000;",
         )
         .unwrap();
 
@@ -102,7 +111,9 @@ mod tests {
                 ResourceQuota::Collections(5000),
                 ResourceQuota::Users(500000),
                 ResourceQuota::Permissions(2000000),
-                ResourceQuota::ClientEncryptionKeys(13)
+                ResourceQuota::ClientEncryptionKeys(13),
+                ResourceQuota::InteropUsers(2000),
+                ResourceQuota::AuthPolicyElements(200000)
             ]
         );
 
